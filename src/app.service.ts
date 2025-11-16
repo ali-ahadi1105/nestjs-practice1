@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { LoggerService } from './core/logger/logger.service';
 
 @Injectable()
 export class AppService {
-  constructor(private readonly configService: ConfigService) {}
+  private context = 'AppService';
+  constructor(private readonly logger: LoggerService) {}
   getHello(): string {
-    const environment = this.configService.get<string>('environment');
-    console.log(environment);
+    this.logger.log('Hello from getHello method :)', this.context, {
+      userId: 123,
+      job: 'web-developer',
+    });
     return 'Hello World!';
   }
 }

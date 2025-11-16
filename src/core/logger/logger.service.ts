@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { Injectable, LoggerService as NestLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -17,8 +18,8 @@ export class LoggerService implements NestLogger {
       ? combine(
           colorize(),
           timestamp(),
-          printf(({ level, context, message }) => {
-            return `${level} [${context}] ${message}`;
+          printf(({ timestamp, level, context, message, meta }) => {
+            return `${timestamp} ${level} [${context}] ${message} ${meta ? JSON.stringify(meta) : ``}`;
           }),
         )
       : combine(timestamp(), json());
@@ -29,13 +30,13 @@ export class LoggerService implements NestLogger {
     });
   }
 
-  log(message: string) {
-    this.logger.info(message);
+  log(message: string, context?: string, meta?: any) {
+    this.logger.info(message, { context, meta });
   }
-  error(message: string) {
-    this.logger.error(message);
+  error(message: string, trace?: string, context?: string, meta?: any) {
+    this.logger.error(message, { trace, context, meta });
   }
-  warn(message: string) {
-    this.logger.warn(message);
+  warn(message: string, context?: string, meta?: any) {
+    this.logger.warn(message, { context, meta });
   }
 }
