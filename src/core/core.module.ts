@@ -1,11 +1,13 @@
 import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import config from '../config';
 import { TransformResponseInterceptor } from './interceptors/transform-response/transform-response.interceptor';
 import { LoggerService } from './logger/logger.service';
 import { LoggerMiddleware } from './middleware/logger/logger.middleware';
 import { DatabaseService } from '../database/database.service';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Global()
 @Module({
@@ -14,6 +16,22 @@ import { DatabaseService } from '../database/database.service';
       isGlobal: true,
       load: [config],
     }),
+    CacheModule.registerAsync({
+      useFactory: async (config: ConfigService) => {
+        const username = config.get(`redis.username`);
+        const password = config.get(`redis.password`);
+        return {
+          store: redisStore,
+          host: config.get(`redis.host`),
+          port: config.get(`redis.port`),
+          ...(username && {username}),
+          ...(password && {password}),
+          ttl: 10,
+          no_ready_check: true
+        }
+      },
+      inject: [ConfigService]
+    }),
   ],
   providers: [
     {
@@ -21,7 +39,11 @@ import { DatabaseService } from '../database/database.service';
       useClass: TransformResponseInterceptor,
     },
     LoggerService,
-    DatabaseService
+    DatabaseService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor
+    }
   ],
   exports: [LoggerService, DatabaseService],
 })
