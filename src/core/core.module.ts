@@ -6,8 +6,9 @@ import { TransformResponseInterceptor } from './interceptors/transform-response/
 import { LoggerService } from './logger/logger.service';
 import { LoggerMiddleware } from './middleware/logger/logger.middleware';
 import { DatabaseService } from '../database/database.service';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
+import { CacheService } from './cache/cache.service';
 
 @Global()
 @Module({
@@ -40,12 +41,9 @@ import * as redisStore from 'cache-manager-redis-store';
     },
     LoggerService,
     DatabaseService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor
-    }
+    CacheService
   ],
-  exports: [LoggerService, DatabaseService],
+  exports: [LoggerService, DatabaseService, CacheService],
 })
 export class CoreModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
